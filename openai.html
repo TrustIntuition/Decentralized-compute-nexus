@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Decentralized Compute Nexus dashboard showcasing compute networks, network metrics, news updates, and more with interactive features.">
+  <link rel="icon" href="favicon.ico">
+  <title>Decentralized Compute Nexus</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700&family=Roboto+Mono&display=swap" rel="stylesheet">
+  <style>
+    /* Global Reset and Variables */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --primary: #00ffcc;
+      --secondary: #ff00ff;
+      --tertiary: #ffcc00;
+      --bg-dark: #0a0a0a;
+      --bg-card: #1a1a1a;
+      --bg-card-hover: rgba(255, 0, 255, 0.1);
+      --glow-primary: rgba(0, 255, 204, 0.4);
+      --glow-secondary: rgba(255, 0, 255, 0.7);
+      --text-primary: #e1e1e1;
+    }
+    body {
+      font-family: 'Orbitron', sans-serif;
+      background: radial-gradient(circle at center, #1a1a1a, #0a0a0a);
+      color: var(--primary);
+      overflow-x: hidden;
+      cursor: crosshair;
+      line-height: 1.6;
+      transition: background 0.5s ease, color 0.5s ease;
+    }
+    /* Dark Mode Overrides */
+    body.dark-mode {
+      background: #121212;
+      color: #ffffff;
+    }
+    .code-font {
+      font-family: 'Roboto Mono', monospace;
+    }
+    /* Header and Navigation */
+    header {
+      background: rgba(0, 0, 0, 0.95);
+      padding: 30px;
+      text-align: center;
+      border-bottom: 4px solid var(--secondary);
+      box-shadow: 0 0 30px var(--glow-secondary);
+      position: relative;
+      z-index: 10;
+    }
+    h1 {
+      font-size: 4rem;
+      text-transform: uppercase;
+      letter-spacing: 8px;
+      animation: neonGlow 1.5s infinite alternate;
+    }
+    nav {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+      gap: 30px;
+    }
+    .nav-link {
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 1.2rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      transition: all 0.3s ease;
+      padding: 10px 15px;
+      border-radius: 8px;
+      position: relative;
+    }
+    .nav-link:hover {
+      color: var(--secondary);
+      background: rgba(0, 255, 204, 0.1);
+    }
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      width: 0;
+      height: 2px;
+      background: var(--secondary);
+      transition: all 0.3s ease;
+      transform: translateX(-50%);
+    }
+    .nav-link:hover::after {
+      width: 80%;
+    }
+    /* Theme Toggle Button */
+    .theme-toggle {
+      background: none;
+      border: 2px solid var(--primary);
+      color: var(--primary);
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 0.9rem;
+    }
+    .theme-toggle:hover {
+      background: var(--primary);
+      color: #000;
+    }
+    /* Main Grid Layout */
+    main {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 30px;
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      grid-template-rows: auto auto;
+      gap: 30px;
+    }
+    .dashboard, .globe-container, .metrics-container, .news-container {
+      background: rgba(20, 20, 20, 0.85);
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 0 25px var(--glow-primary);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .dashboard:hover, .globe-container:hover, .metrics-container:hover, .news-container:hover {
+      box-shadow: 0 0 40px var(--glow-secondary);
+    }
+    .dashboard::before, .globe-container::before, .metrics-container::before, .news-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, transparent, rgba(0, 255, 204, 0.05), transparent);
+      animation: shimmer 3s infinite linear;
+      pointer-events: none;
+    }
+    .metrics-container {
+      grid-column: 1 / 3;
+    }
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--primary);
+    }
+    .section-header h2 {
+      font-size: 2rem;
+      letter-spacing: 3px;
+    }
+    .control-panel {
+      display: flex;
+      gap: 15px;
+    }
+    .btn {
+      background: rgba(0, 0, 0, 0.6);
+      color: var(--primary);
+      border: 1px solid var(--primary);
+      padding: 8px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: 'Orbitron', sans-serif;
+      letter-spacing: 1px;
+    }
+    .btn:hover {
+      background: rgba(0, 255, 204, 0.2);
+      color: var(--secondary);
+      border-color: var(--secondary);
+    }
+    .globe-container {
+      height: 600px;
+      position: relative;
+    }
+    canvas {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      z-index: 1;
+    }
+    .globe-controls {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      z-index: 2;
+      display: flex;
+      gap: 10px;
+    }
+    /* Platform Cards Grid */
+    .platform-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .platform-card {
+      background: var(--bg-card);
+      padding: 20px;
+      border-radius: 10px;
+      transition: all 0.4s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .platform-card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(
+        to right,
+        rgba(0, 255, 204, 0),
+        rgba(0, 255, 204, 0.1),
+        rgba(0, 255, 204, 0)
+      );
+      transform: rotate(30deg);
+      animation: shine 6s infinite linear;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .platform-card:hover::before {
+      opacity: 1;
+    }
+    .platform-card:hover {
+      transform: translateY(-10px) scale(1.05);
+      box-shadow: 0 0 30px rgba(0, 255, 204, 0.8);
+      background: var(--bg-card-hover);
+    }
+    .platform-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    .platform-card h3 {
+      font-size: 1.5rem;
+      margin-bottom: 5px;
+      color: var(--secondary);
+      letter-spacing: 1px;
+    }
+    .platform-logo {
+      width: 40px;
+      height: 40px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      color: var(--primary);
+    }
+    .platform-stats {
+      margin: 15px 0;
+    }
+    .platform-card p {
+      font-size: 1.1rem;
+      margin: 8px 0;
+      display: flex;
+      justify-content: space-between;
+    }
+    .platform-card p .value {
+      font-weight: bold;
+      color: var(--text-primary);
+    }
+    .platform-card .trend {
+      font-size: 0.8rem;
+      color: var(--tertiary);
+      margin-left: 5px;
+    }
+    .trend.up { color: #00ff00; }
+    .trend.down { color: #ff4d4d; }
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 15px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .platform-card a {
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 0.9rem;
+      display: block;
+      transition: all 0.3s ease;
+    }
+    .platform-card a:hover {
+      color: var(--secondary);
+      transform: translateX(5px);
+    }
+    .status-indicator {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+    .status-healthy { background-color: #00ff00; box-shadow: 0 0 8px #00ff00; }
+    .status-warning { background-color: #ffcc00; box-shadow: 0 0 8px #ffcc00; }
+    .status-issue { background-color: #ff4d4d; box-shadow: 0 0 8px #ff4d4d; }
+    
+    /* Metrics and Charts */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    .metric-card {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+    }
+    .metric-title {
+      font-size: 1.2rem;
+      color: var(--tertiary);
+      margin-bottom: 10px;
+    }
+    .metric-value {
+      font-size: 2.5rem;
+      font-weight: bold;
+      margin: 15px 0;
+      color: var(--text-primary);
+    }
+    .metric-change {
+      font-size: 1rem;
+      margin: 5px 0;
+    }
+    .charts-container {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .chart-container {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 15px;
+      border-radius: 10px;
+      height: 300px;
+    }
+    /* News Section */
+    .news-container {
+      grid-column: 1 / 3;
+    }
+    .news-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .news-card {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 20px;
+      border-radius: 10px;
+      transition: all 0.3s ease;
+    }
+    .news-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 0 15px rgba(0, 255, 204, 0.3);
+    }
+    .news-date {
+      font-size: 0.8rem;
+      color: var(--tertiary);
+      margin-bottom: 10px;
+    }
+    .news-title {
+      font-size: 1.3rem;
+      color: var(--secondary);
+      margin-bottom: 10px;
+    }
+    .news-excerpt {
+      font-size: 1rem;
+      color: var(--text-primary);
+      margin-bottom: 15px;
+    }
+    .news-card a {
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+    }
+    .news-card a:hover {
+      color: var(--secondary);
+      transform: translateX(5px);
+    }
+    /* Network Status and Token Prices */
+    .network-status {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      padding: 10px 20px;
+      border-radius: 30px;
+      display: flex;
+      align-items: center;
+      z-index: 100;
+      box-shadow: 0 0 15px rgba(0, 255, 204, 0.5);
+    }
+    .pulse {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #00ff00;
+      margin-right: 10px;
+      animation: pulse 1.5s infinite;
+    }
+    .token-prices {
+      position: fixed;
+      top: 90px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      padding: 10px 20px;
+      border-radius: 10px;
+      z-index: 100;
+      box-shadow: 0 0 15px rgba(0, 255, 204, 0.5);
+    }
+    .token-row {
+      display: flex;
+      justify-content: space-between;
+      margin: 5px 0;
+      font-size: 0.9rem;
+    }
+    .token-name {
+      margin-right: 15px;
+      color: var(--tertiary);
+    }
+    .token-price {
+      color: var(--text-primary);
+    }
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 30px;
+      background: rgba(0, 0, 0, 0.9);
+      border-top: 2px solid var(--primary);
+      position: relative;
+      margin-top: 50px;
+    }
+    .footer-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1400px;
+      margin: 0 auto;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .footer-links {
+      display: flex;
+      gap: 20px;
+    }
+    .footer-links a {
+      color: var(--primary);
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+    .footer-links a:hover {
+      color: var(--secondary);
+    }
+    .social-links {
+      display: flex;
+      gap: 15px;
+    }
+    .social-link {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(0, 255, 204, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      color: var(--primary);
+      text-decoration: none;
+    }
+    .social-link:hover {
+      background: rgba(255, 0, 255, 0.2);
+      color: var(--secondary);
+      transform: translateY(-5px);
+    }
+    /* Loading Overlay and Alert Toast */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      transition: opacity 1s ease;
+    }
+    .loading-spinner {
+      width: 100px;
+      height: 100px;
+      border: 5px solid transparent;
+      border-top: 5px solid var(--primary);
+      border-right: 5px solid var(--secondary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+    .progress-bar {
+      width: 300px;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 5px;
+      overflow: hidden;
+      margin: 20px 0;
+    }
+    .progress {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(to right, var(--primary), var(--secondary));
+      transition: width 0.3s ease;
+    }
+    .alert-toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.9);
+      color: var(--primary);
+      padding: 15px 20px;
+      border-radius: 8px;
+      border-left: 5px solid var(--secondary);
+      box-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
+      z-index: 1000;
+      transition: all 0.5s ease;
+      transform: translateX(150%);
+    }
+    .alert-toast.show {
+      transform: translateX(0);
+    }
+    
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-dark);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--primary);
+      border-radius: 5px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--secondary);
+    }
+    
+    /* Animations */
+    @keyframes neonGlow {
+      from { text-shadow: 0 0 10px var(--primary), 0 0 20px var(--secondary); }
+      to { text-shadow: 0 0 20px var(--primary), 0 0 40px var(--secondary); }
+    }
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+    @keyframes shine {
+      0% { transform: translateX(-100%) rotate(30deg); }
+      100% { transform: translateX(100%) rotate(30deg); }
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(0, 255, 0, 0.7); }
+      70% { box-shadow: 0 0 0 10px rgba(0, 255, 0, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(0, 255, 0, 0); }
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 1200px) {
+      main { grid-template-columns: 1fr; }
+      .globe-container { grid-column: 1 / 2; }
+      .metrics-container { grid-column: 1 / 2; }
+      .charts-container { grid-template-columns: 1fr; }
+      .section-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+    }
+    @media (max-width: 768px) {
+      h1 { font-size: 2.5rem; letter-spacing: 4px; }
+      nav { flex-direction: column; gap: 15px; }
+      .platform-grid, .metrics-grid, .news-grid { grid-template-columns: 1fr; }
+      .footer-content { flex-direction: column; gap: 20px; text-align: center; }
+      .token-prices { display: none; }
+    }
+    @media (max-width: 480px) {
+      h1 { font-size: 1.8rem; }
+      main { padding: 15px; }
+      .section-header h2 { font-size: 1.5rem; }
+      .metric-value { font-size: 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="loading-overlay" role="alert" aria-live="assertive">
+    <div class="loading-spinner"></div>
+    <div class="progress-bar">
+      <div id="progress" class="progress"></div>
+    </div>
+    <p id="loading-text">Initializing Decentralized Compute Nexus...</p>
+  </div>
+  
+  <!-- Alert Toast -->
+  <div id="alert-toast" class="alert-toast" role="alert" aria-live="polite">
+    <p id="alert-message"></p>
+  </div>
+
+  <header role="banner">
+    <h1>Decentralized Compute Nexus</h1>
+    <nav role="navigation" aria-label="Main Navigation">
+      <a href="#dashboard" class="nav-link">Dashboard</a>
+      <a href="#metrics" class="nav-link">Network Metrics</a>
+      <a href="#news" class="nav-link">DeCom News</a>
+      <a href="#settings" class="nav-link">Settings</a>
+      <!-- Theme Toggle Button -->
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle Dark/Light Theme">Toggle Theme</button>
+    </nav>
+  </header>
+  
+  <!-- Token Prices Widget -->
+  <div class="token-prices">
+    <div class="token-row">
+      <span class="token-name">GLM</span>
+      <span class="token-price">$0.42 <span class="trend up">+5.2%</span></span>
+    </div>
+    <div class="token-row">
+      <span class="token-name">AKT</span>
+      <span class="token-price">$1.87 <span class="trend up">+2.3%</span></span>
+    </div>
+    <div class="token-row">
+      <span class="token-name">RNDR</span>
+      <span class="token-price">$4.28 <span class="trend down">-1.5%</span></span>
+    </div>
+    <div class="token-row">
+      <span class="token-name">RLC</span>
+      <span class="token-price">$2.15 <span class="trend up">+3.7%</span></span>
+    </div>
+    <div class="token-row">
+      <span class="token-name">ICP</span>
+      <span class="token-price">$15.32 <span class="trend up">+7.1%</span></span>
+    </div>
+  </div>
+
+  <main>
+    <!-- Dashboard Section -->
+    <section id="dashboard" class="dashboard">
+      <div class="section-header">
+        <h2>Compute Networks</h2>
+        <div class="control-panel">
+          <button class="btn" id="refresh-btn"><i class="fas fa-sync-alt"></i> Refresh</button>
+          <button class="btn" id="filter-btn"><i class="fas fa-filter"></i> Filter</button>
+          <button class="btn" id="view-btn"><i class="fas fa-th-large"></i> View</button>
+        </div>
+      </div>
+      <div class="platform-grid">
+        <div class="platform-card" id="golem">
+          <div class="platform-header">
+            <h3>Golem Network</h3>
+            <div class="platform-logo"><i class="fas fa-brain"></i></div>
+          </div>
+          <div class="platform-stats">
+            <p>Status: <span class="value"><span class="status-indicator status-healthy"></span>Operational</span></p>
+            <p>Active Providers: <span class="value" id="golem-providers">Loading...</span> <span class="trend up">+2.3%</span></p>
+            <p>Compute Time: <span class="value" id="golem-compute">Loading...</span> hours <span class="trend up">+5.7%</span></p>
+            <p>Total Tasks: <span class="value" id="golem-jobs">Loading...</span> <span class="trend up">+3.2%</span></p>
+            <p>Avg. Cost/Hour: <span class="value">0.25 GLM</span> <span class="trend down">-1.2%</span></p>
+          </div>
+          <div class="card-footer">
+            <a href="https://stats.golem.network/" target="_blank"><i class="fas fa-external-link-alt"></i> View Source</a>
+            <span class="code-font">v0.13.2</span>
+          </div>
+        </div>
+        <div class="platform-card" id="akash">
+          <div class="platform-header">
+            <h3>Akash Network</h3>
+            <div class="platform-logo"><i class="fas fa-cloud"></i></div>
+          </div>
+          <div class="platform-stats">
+            <p>Status: <span class="value"><span class="status-indicator status-healthy"></span>Operational</span></p>
+            <p>Active Leases: <span class="value" id="akash-deployments">Loading...</span> <span class="trend up">+4.1%</span></p>
+            <p>GPU Capacity: <span class="value" id="akash-gpu">Loading...</span> GPUs <span class="trend up">+12.8%</span></p>
+            <p>Total Jobs: <span class="value" id="akash-jobs">Loading...</span> <span class="trend up">+8.5%</span></p>
+            <p>Avg. Cost/Hour: <span class="value">2.4 AKT</span> <span class="trend down">-0.8%</span></p>
+          </div>
+          <div class="card-footer">
+            <a href="https://stats.akash.network/" target="_blank"><i class="fas fa-external-link-alt"></i> View Source</a>
+            <span class="code-font">v0.22.1</span>
+          </div>
+        </div>
+        <div class="platform-card" id="render">
+          <div class="platform-header">
+            <h3>Render Network</h3>
+            <div class="platform-logo"><i class="fas fa-cubes"></i></div>
+          </div>
+          <div class="platform-stats">
+            <p>Status: <span class="value"><span class="status-indicator status-warning"></span>High Demand</span></p>
+            <p>Active GPUs: <span class="value" id="render-gpus">Loading...</span> <span class="trend up">+7.2%</span></p>
+            <p>Frames Rendered: <span class="value" id="render-frames">Loading...</span> <span class="trend up">+15.3%</span></p>
+            <p>Total Jobs: <span class="value" id="render-jobs">Loading...</span> <span class="trend up">+9.7%</span></p>
+            <p>Avg. Cost/Frame: <span class="value">0.18 RNDR</span> <span class="trend up">+2.3%</span></p>
+          </div>
+          <div class="card-footer">
+            <a href="https://stats.renderfoundation.com/" target="_blank"><i class="fas fa-external-link-alt"></i> View Source</a>
+            <span class="code-font">v3.5.1</span>
+          </div>
+        </div>
+        <div class="platform-card" id="iexec">
+          <div class="platform-header">
+            <h3>IExec</h3>
+            <div class="platform-logo"><i class="fas fa-microchip"></i></div>
+          </div>
+          <div class="platform-stats">
+            <p>Status: <span class="value"><span class="status-indicator status-healthy"></span>Operational</span></p>
+            <p>Active Workers: <span class="value" id="iexec-workers">Loading...</span> <span class="trend up">+1.8%</span></p>
+            <p>Compute Hours: <span class="value" id="iexec-compute">Loading...</span> hours <span class="trend up">+3.4%</span></p>
+            <p>Total Tasks: <span class="value" id="iexec-tasks">Loading...</span> <span class="trend up">+2.9%</span></p>
+            <p>Avg. Cost/Task: <span class="value">1.25 RLC</span> <span class="trend down">-0.5%</span></p>
+          </div>
+          <div class="card-footer">
+            <a href="https://dashboard.iex.ec/" target="_blank"><i class="fas fa-external-link-alt"></i> View Source</a>
+            <span class="code-font">v7.2.0</span>
+          </div>
+        </div>
+        <div class="platform-card" id="ic">
+          <div class="platform-header">
+            <h3>Internet Computer</h3>
+            <div class="platform-logo"><i class="fas fa-network-wired"></i></div>
+          </div>
+          <div class="platform-stats">
+            <p>Status: <span class="value"><span class="status-indicator status-healthy"></span>Operational</span></p>
+            <p>Active Canisters: <span class="value" id="ic-canisters">Loading...</span> <span class="trend up">+5.1%</span></p>
+            <p>Total Nodes: <span class="value" id="ic-nodes">Loading...</span> <span class="trend up">+0.8%</span></p>
+            <p>Total Cycles: <span class="value" id="ic-jobs">Loading...</span> <span class="trend up">+11.2%</span></p>
+            <p>Avg. Canister Cost: <span class="value">0.012 ICP/day</span> <span class="trend up">+0.3%</span></p>
+          </div>
+          <div class="card-footer">
+            <a href="https://dashboard.dfinity.org/" target="_blank"><i class="fas fa-external-link-alt"></i> View Source</a>
+            <span class="code-font">v1.9.3</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Global Network Section -->
+    <section class="globe-container">
+      <div class="section-header">
+        <h2>Global Network</h2>
+        <div class="control-panel">
+          <button class="btn"><i class="fas fa-globe"></i> Rotate</button>
+          <button class="btn"><i class="fas fa-search-plus"></i> Zoom</button>
+        </div>
+      </div>
+      <canvas id="globe-canvas"></canvas>
+      <div class="globe-controls">
+        <button class="btn"><i class="fas fa-play"></i></button>
+        <button class="btn"><i class="fas fa-pause"></i></button>
+      </div>
+    </section>
+
+    <!-- Metrics Section -->
+    <section id="metrics" class="metrics-container">
+      <div class="section-header">
+        <h2>Network Metrics</h2>
+        <div class="control-panel">
+          <button class="btn"><i class="fas fa-sync-alt"></i> Update</button>
+          <button class="btn"><i class="fas fa-download"></i> Export</button>
+        </div>
+      </div>
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-title">Total Compute Hours</div>
+          <div class="metric-value" id="total-compute">Loading...</div>
+          <div class="metric-change trend up">+8.4% this week</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Active Providers</div>
+          <div class="metric-value" id="total-providers">Loading...</div>
+          <div class="metric-change trend up">+3.9% this week</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Network Uptime</div>
+          <div class="metric-value">99.97%</div>
+          <div class="metric-change trend up">Stable</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Total Transactions</div>
+          <div class="metric-value" id="total-tx">Loading...</div>
+          <div class="metric-change trend up">+12.1% this week</div>
+        </div>
+      </div>
+      <div class="charts-container">
+        <div class="chart-container" id="compute-trend-chart"></div>
+        <div class="chart-container" id="provider-growth-chart"></div>
+      </div>
+    </section>
+
+    <!-- News Section -->
+    <section id="news" class="news-container">
+      <div class="section-header">
+        <h2>DeCom News</h2>
+        <div class="control-panel">
+          <button class="btn"><i class="fas fa-rss"></i> RSS Feed</button>
+          <button class="btn"><i class="fas fa-archive"></i> Archive</button>
+        </div>
+      </div>
+      <div class="news-grid">
+        <article class="news-card">
+          <div class="news-date">Feb 24, 2025</div>
+          <div class="news-title">Golem Network Upgrades to v0.13.3</div>
+          <div class="news-excerpt">Improved task scheduling and provider efficiency rolled out in latest update.</div>
+          <a href="#" target="_blank"><i class="fas fa-link"></i> Read More</a>
+        </article>
+        <article class="news-card">
+          <div class="news-date">Feb 23, 2025</div>
+          <div class="news-title">Akash GPU Capacity Doubles</div>
+          <div class="news-excerpt">New providers bring unprecedented compute power to the network.</div>
+          <a href="#" target="_blank"><i class="fas fa-link"></i> Read More</a>
+        </article>
+        <article class="news-card">
+          <div class="news-date">Feb 22, 2025</div>
+          <div class="news-title">Render Network Hits 1M Frames</div>
+          <div class="news-excerpt">Milestone achieved as demand for decentralized rendering surges.</div>
+          <a href="#" target="_blank"><i class="fas fa-link"></i> Read More</a>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <div class="network-status">
+    <div class="pulse"></div>
+    <span>Network Online</span>
+  </div>
+
+  <footer role="contentinfo">
+    <div class="footer-content">
+      <div class="footer-links">
+        <a href="#">About</a>
+        <a href="#">Docs</a>
+        <a href="#">Support</a>
+        <a href="#">Privacy</a>
+      </div>
+      <div class="social-links">
+        <a href="#" class="social-link" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+        <a href="#" class="social-link" aria-label="Discord"><i class="fab fa-discord"></i></a>
+        <a href="#" class="social-link" aria-label="GitHub"><i class="fab fa-github"></i></a>
+        <a href="#" class="social-link" aria-label="Telegram"><i class="fab fa-telegram"></i></a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JavaScript for Theme Toggle and Basic Interactivity -->
+  <script defer>
+    document.addEventListener('DOMContentLoaded', () => {
+      const themeToggleBtn = document.getElementById('theme-toggle');
+      themeToggleBtn.addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+      });
+
+      // Simulate progress bar and then remove the loading overlay after load
+      const progress = document.getElementById('progress');
+      let width = 0;
+      const interval = setInterval(() => {
+        width += 10;
+        progress.style.width = width + '%';
+        if (width >= 100) {
+          clearInterval(interval);
+          document.getElementById('loading-overlay').style.opacity = '0';
+          setTimeout(() => {
+            document.getElementById('loading-overlay').style.display = 'none';
+          }, 1000);
+        }
+      }, 150);
+
+      // Example: Show alert toast after 3 seconds
+      setTimeout(() => {
+        const alertToast = document.getElementById('alert-toast');
+        const alertMessage = document.getElementById('alert-message');
+        alertMessage.textContent = "Welcome to Decentralized Compute Nexus!";
+        alertToast.classList.add('show');
+        setTimeout(() => {
+          alertToast.classList.remove('show');
+        }, 5000);
+      }, 3000);
+    });
+  </script>
+</body>
+</html>
