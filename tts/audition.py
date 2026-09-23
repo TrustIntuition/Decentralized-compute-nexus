@@ -11,14 +11,8 @@ SOCRATES_REF_URL="https://resource2.heygen.ai/text_to_speech/7cb0a2dbb3cc4537b4c
 HUSSERL_REF_URL="https://resource2.heygen.ai/text_to_speech/7cb0a2dbb3cc4537b4c2bdc736b04dc6/0e2ff5b962084420879e076a2345d13f/id=4b038f34-545a-4bfd-b13b-4c3e7ee3ce09.wav"
 
 TURNS=[
-("SOCRATES","Husserl, you have come to tell me what consciousness is. I have spent my life asking men what they mean by the words they use. So begin simply. When I see this cup, what is actually given?"),
-("HUSSERL","Only a profile is strictly seen. The far side is absent, yet intended as belonging to the same cup. Consciousness is always consciousness of something, and every appearance carries a horizon of further possible appearances."),
-("SOCRATES","Then seeing already contains what is absent."),
-("HUSSERL","Absence, yes. Not nothingness."),
-("SOCRATES","You distinguish them quickly. Suppose the whole world were doubtful. Would the appearing also be doubtful?"),
-("HUSSERL","That is why I perform the epoché. I do not deny the world; I suspend its unquestioned existence. What remains is the field of appearing itself: perceiving, remembering, judging, imagining, and the objects precisely as they are given."),
-("SOCRATES","So you can bracket the world, but not the fact that something appears. And to whom does it appear?"),
-("HUSSERL","To transcendental subjectivity. Not Edmund Husserl as a biological man, but the ego-pole of the stream of experience.")
+("SOCRATES","Then purge the picture. No darkness. No silence. No waiting. No empty duration. No sleeper. No observer whispering, I am gone. What remains?"),
+("HUSSERL","No further experience. And no, that no-further-experience is never given, retained, remembered, fulfilled, or encountered by a later phase.")
 ]
 
 def dl(url,path):
