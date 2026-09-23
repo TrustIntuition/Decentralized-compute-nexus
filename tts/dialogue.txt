@@ -164,4 +164,4 @@ HUSSERL: That I will accept.
 
 SOCRATES: Good. The disappearance of seeing cannot itself be seen. And every attempt to see it has already failed—by succeeding.
 
-# trigger render
+# trigger corrected render
