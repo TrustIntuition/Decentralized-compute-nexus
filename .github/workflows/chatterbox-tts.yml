@@ -1,0 +1,41 @@
+name: Chatterbox Socrates Husserl Render
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "tts/**"
+      - ".github/workflows/chatterbox-tts.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: System audio tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+      - name: Install neural TTS
+        run: |
+          python -m pip install --upgrade pip
+          pip install chatterbox-tts pydub requests
+      - name: Render full dialogue
+        run: python tts/render.py
+      - name: Upload mastered audio
+        uses: actions/upload-artifact@v4
+        with:
+          name: socrates-husserl-chatterbox-master
+          path: |
+            tts/output/AUDITION_Socrates_Husserl.mp3
+            tts/output/The_Last_Appearance_Chatterbox_Master.mp3
+          retention-days: 1
+          compression-level: 0
