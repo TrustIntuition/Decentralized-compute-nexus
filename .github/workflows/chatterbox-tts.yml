@@ -5,6 +5,8 @@ on:
       - main
     paths:
       - "tts/**"
+      - "!tts/audition.py"
+      - "!tts/audition-trigger.txt"
       - ".github/workflows/chatterbox-tts.yml"
 
 permissions:
