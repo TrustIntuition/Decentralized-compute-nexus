@@ -1,8 +1,8 @@
 name: Chatterbox Socrates Husserl Render
 on:
-  push:
+  pull_request:
     branches:
-      - tmp-chatterbox-socrates-husserl
+      - main
     paths:
       - "tts/**"
       - ".github/workflows/chatterbox-tts.yml"
