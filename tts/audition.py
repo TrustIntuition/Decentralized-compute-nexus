@@ -1,7 +1,7 @@
 from pathlib import Path
-import requests, subprocess, torch, torchaudio as ta
+import requests, subprocess, shutil, json, os
 from pydub import AudioSegment, effects
-from chatterbox.tts import ChatterboxTTS
+from gradio_client import Client, handle_file
 
 ROOT=Path(__file__).parent
 OUT=ROOT/"output"
@@ -17,35 +17,70 @@ TURNS=[
 
 def dl(url,path):
     r=requests.get(url,timeout=120); r.raise_for_status(); path.write_bytes(r.content)
-def prep(url,name):
-    src=OUT/f"{name}_src.wav"; dst=OUT/f"{name}_ref.wav"
-    dl(url,src)
-    subprocess.run(["ffmpeg","-y","-loglevel","error","-i",str(src),"-t","10","-ac","1","-ar","24000",
-                    "-af","highpass=f=60,lowpass=f=12000,loudnorm=I=-20:TP=-2:LRA=7",str(dst)],check=True)
-    return dst
 
-sref=prep(SOCRATES_REF_URL,"socrates")
-href=prep(HUSSERL_REF_URL,"husserl")
-model=ChatterboxTTS.from_pretrained(device="cpu")
-master=AudioSegment.silent(duration=500,frame_rate=24000)
+sref=OUT/"socrates_ref.wav"; href=OUT/"husserl_ref.wav"
+dl(SOCRATES_REF_URL,sref); dl(HUSSERL_REF_URL,href)
+
+client=Client("ResembleAI/Chatterbox")
+try:
+    api=client.view_api(return_format="dict")
+    print(json.dumps(api,default=str)[:8000],flush=True)
+except Exception as e:
+    print("view_api warning",repr(e),flush=True)
+
+master=AudioSegment.silent(duration=400,frame_rate=24000)
+
+def call(text,ref,ex,cfg):
+    kwargs=dict(
+        text_input=text,
+        audio_prompt_path_input=handle_file(str(ref)),
+        exaggeration_input=ex,
+        temperature_input=0.72,
+        seed_num_input=37,
+        cfgw_input=cfg,
+        vad_trim_input=True,
+    )
+    try:
+        return client.predict(**kwargs, api_name="/generate_tts_audio")
+    except Exception as e1:
+        print("named endpoint failed",repr(e1),flush=True)
+        # Current official Space has a single Generate event; fn_index=0 is fallback.
+        return client.predict(
+            text, handle_file(str(ref)), ex, 0.72, 37, cfg, True, fn_index=0
+        )
+
 for i,(sp,text) in enumerate(TURNS,1):
     ref=sref if sp=="SOCRATES" else href
-    ex=0.57 if sp=="SOCRATES" else 0.42
-    cfg=0.34 if sp=="SOCRATES" else 0.46
-    print(i,sp,text[:70],flush=True)
-    with torch.inference_mode():
-        wav=model.generate(text,audio_prompt_path=str(ref),exaggeration=ex,cfg_weight=cfg)
-    p=OUT/f"a{i:02d}.wav"; ta.save(str(p),wav.cpu(),model.sr)
-    seg=AudioSegment.from_wav(p)
+    ex=0.60 if sp=="SOCRATES" else 0.40
+    cfg=0.32 if sp=="SOCRATES" else 0.48
+    print("GENERATE",i,sp,text,flush=True)
+    result=call(text,ref,ex,cfg)
+    print("RESULT",repr(result),flush=True)
+
+    # gradio_client may return a filepath, FileData-like path, or (sr, ndarray)-derived temp file.
+    path=None
+    if isinstance(result,str):
+        path=result
+    elif hasattr(result,"path"):
+        path=result.path
+    elif isinstance(result,(list,tuple)):
+        for v in result:
+            if isinstance(v,str) and Path(v).exists():
+                path=v; break
+            if hasattr(v,"path") and Path(v.path).exists():
+                path=v.path; break
+    if not path:
+        raise RuntimeError(f"Could not resolve generated audio path: {result!r}")
+
+    seg=AudioSegment.from_file(path)
     if seg.dBFS != float("-inf"):
         seg=seg.apply_gain((-20.0 if sp=="SOCRATES" else -19.5)-seg.dBFS)
-    seg=effects.compress_dynamic_range(seg,threshold=-19,ratio=1.7,attack=7,release=85)
-    master+=seg+AudioSegment.silent(duration=650 if text.endswith("?") else 450,frame_rate=seg.frame_rate)
+    seg=effects.compress_dynamic_range(seg,threshold=-19,ratio=1.55,attack=7,release=90)
+    master+=seg+AudioSegment.silent(duration=700,frame_rate=seg.frame_rate)
 
-wav=OUT/"AUDITION_ONLY.wav"
-mp3=OUT/"AUDITION_ONLY.mp3"
+wav=OUT/"AUDITION_ONLY.wav"; mp3=OUT/"AUDITION_ONLY.mp3"
 master.export(wav,format="wav")
 subprocess.run(["ffmpeg","-y","-loglevel","error","-i",str(wav),
-                "-af","highpass=f=65,lowpass=f=14500,equalizer=f=3200:t=q:w=1.2:g=1.2,loudnorm=I=-16:TP=-1.2:LRA=9",
+                "-af","highpass=f=65,lowpass=f=14500,equalizer=f=3200:t=q:w=1.2:g=1.0,loudnorm=I=-16:TP=-1.2:LRA=9",
                 "-ar","44100","-ac","2","-codec:a","libmp3lame","-b:a","192k",str(mp3)],check=True)
 print("DONE",mp3,mp3.stat().st_size,flush=True)
