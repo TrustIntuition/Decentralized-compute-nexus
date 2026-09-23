@@ -112,6 +112,19 @@ for i,(speaker,text) in enumerate(turns,1):
 
     seg=AudioSegment.from_wav(wav_path)
     seg=trim(seg)
+
+    # Give Socrates a subtly deeper, older timbre without the "bass effect" sound.
+    # ~0.9 semitone down, with duration restored so pacing remains unchanged.
+    if speaker=="SOCRATES":
+        deep_path=RAW/f"{i:03d}_socrates_deep.wav"
+        subprocess.run([
+            "ffmpeg","-y","-loglevel","error","-i",str(wav_path),
+            "-af","asetrate=24000*0.95,aresample=24000,atempo=1.0526316",
+            str(deep_path)
+        ], check=True)
+        seg=AudioSegment.from_wav(deep_path)
+        seg=trim(seg)
+
     seg=clip_gain(seg, -20.0 if speaker=="SOCRATES" else -19.5)
     # Very light dynamics only; intelligibility over "cinematic" processing.
     seg=effects.compress_dynamic_range(seg, threshold=-19.0, ratio=1.8, attack=7, release=85)
